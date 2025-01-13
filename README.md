@@ -19,44 +19,29 @@ Two inputs control the character movement.
     c. Mappings: forward, backward, left, right moves character slowly in that direction, 360 degrees on the azimuth plane </i>
 
 ## Narrative Overview
-1. Vocal Calibration / Onboarding - guide and measure player's voice.
+1. Vocal Calibration / Onboarding - guide and measure player's voice
 2. 3rd POV MR - more familiarization and practice, big transition
 3. 1st POV MR - fly with your voice to follow the guided melody
 
 ## Scene 1: 3rd Person [MR] Vocal Calibration / Onboarding
 
-Tutorial guides people to sing in their lowest and highest comfortable pitches.  We measure and capture to adjust gameplay accordingly.
+Colliders fly at you, each emitting a target sound and displaying at the corresponding pitch/frequency elevation.  Your goal is to match the golden snitch to collide with it. 
 
-## Scene 2: 3rd Person [MR] Player Interaction
+We measure and capture to adjust gameplay to the vocal range for later stages.
 
-
-
-### A voice guided "golden snitch"
+### Your voice guided "golden snitch" 
 
 Objectives
 - Gently introduce the interaction and world
-- Start with comfortable, achievable notes
-- Build suspense in the transition
+- Fun interaction for exploring your vocal range ability
+- Capture ability to hit notes, to establish and calibrate vocal range for following levels
 
-The experience guides players through an exercise to continue familarization with voice control and head tilt, by guiding a "golden snitch"-like object through space to collide with objects in a musical way.
+The experience guides players through an exercise to initialize familarization with voice control and head tilt, by guiding a "golden snitch"-like object through space to collide with objects in a musical way.
 
 The voice and head tilt controls the currentPitch sphere as the main player.  In this 3rd person POV, we guide a player object freely through the world, within the MR room's bounds on the X and Z axis.  The height is limited in Y axis by the Height Calculation parameters driven by the amplitude and pitch of the voice.  X and Z axis and driven by head tilt.
 
-### Pickup Visualization
-TBD
-
-### Height Calculation
-
-```
-Height = baseHeight + (log(frequency) - log(minFreq)) / (log(maxFreq) - log(minFreq)) * (maxHeight - baseHeight)
-
-Where:
-- baseHeight = 0.5 meter (height at 80 Hz)
-- maxHeight = 2.5 meters (height at maximum frequency)
-- minFreq = 80 Hz (lowest supported note)
-- maxFreq = 300 Hz (highest supported note)
-```
-
+### Pickup Feedback
+A ding will sound if you can hit the pitch at the right timing. 
 
 ### Scene Hierarchy and Components
 ```
@@ -64,24 +49,32 @@ UnityAudioProto2
 ├── AudioManager
 │   └── MPMAudioAnalyzer (Pitch detection and voice processing)
 ├── [BuildingBlock] Camera Rig
-├──PickupManager 
-│   ├── PickupManager
-├──PitchVisualizer
+├──PitchVisualizer3POV
 │   ├── CurrentPitchSphere
 │   ├── TargetPitchSphere
 │   ├── Labels
 │   ├── PlayerControl
 ├── TerrainManager
+├── PickupManager3POV
+├── Range Report Canvas
+├── Event System
 
 ```
 
+## Scene 2: 3rd Person [MR] Player Interaction
+
+The player follows a spline for more complex motion.
+
+Details TBD  @Berkay
 
 ## Scene 3: 1st Person [VR] Player Interaction
 
 Objectives
 - Apex and payoff
-- Give sensation of flying
+- Give sensation of flying with voice and head tilt steering
 - Stimulate and motivate singing
+
+## Scene Hierarchy and Components
 
 ### Voice-Height Mapping
 
@@ -92,6 +85,7 @@ Players control their height through voice pitch:
 4. Visual feedback shows current and target heights
 5. Confidence metrics ensure stable pitch detection
 
+
 ### Musical Pickup Collection
 
 Musical pickups are placed at heights corresponding to their frequencies:
@@ -100,18 +94,6 @@ Musical pickups are placed at heights corresponding to their frequencies:
 3. Players must match the pickup's pitch to reach its height
 4. Visual and audio feedback indicate proximity to correct pitch
 5. Successful collection requires maintaining pitch for a brief duration
-
-### Height Calculation
-
-```
-Height = baseHeight + (log(frequency) - log(minFreq)) / (log(maxFreq) - log(minFreq)) * (maxHeight - baseHeight)
-
-Where:
-- baseHeight = 4 meters (height at 100 Hz)
-- maxHeight = 20 meters (height at maximum frequency)
-- minFreq = 80 Hz (lowest supported note)
-- maxFreq = 300 Hz (highest supported note)
-```
 
 ## Visual Feedback
 
@@ -129,16 +111,35 @@ Where:
 - Distance markers show height targets
 - Frequency and confidence displays
 
+### Scene Hierarchy
+```
+UnityAudioProto2
+├── AudioManager
+│   └── MPMAudioAnalyzer (Pitch detection and voice processing)
+├── [BuildingBlock] Camera Rig
+│   ├── Player (Movement controller)
+│   └── TrackingSpace
+│       ├── CenterEyeAnchor
+│       │   └── PitchVisualizer
+│       ├── LeftEyeAnchor
+│       └── RightEyeAnchor
+├── TerrainManager (Procedural terrain generation)
+├── LandmarkManager (Dynamic reference objects)
+├── ReferenceGrid
+├──PickupManager (Musical progression system) [In progress]
+│   ├── PickupManager 
+```
+
 ## Implementation Details
+
 
 ### Musical Pickup Collection
 
 Musical pickups are placed at heights corresponding to their frequencies:
 1. Each pickup represents a note in the sequence
-2. Pickups are positioned ahead of the player in a path
-3. Players must match the pickup's pitch to reach its height
-4. Visual and audio feedback indicate proximity to correct pitch
-5. Successful collection requires maintaining pitch for a brief duration
+2. Players must match the pickup's pitch to reach its height
+3. Visual and audio feedback indicate proximity to correct pitch
+4. Successful collection requires maintaining pitch for a brief duration
 
 ### Key Components
 
@@ -159,46 +160,18 @@ Musical pickups are placed at heights corresponding to their frequencies:
    - Collection detection
    - Progress tracking
 
-### Configuration Parameters
-
-```csharp
-[Header("Height Mapping")]
-float baseHeight = 4f;     // Height at 100 Hz
-float maxHeight = 20f;     // Maximum height
-float minFreq = 80f;       // Lowest note (below C3)
-float maxFreq = 300f;      // Highest note (above C4)
-
-[Header("Musical Sequence")]
-MusicalPickup[] sequence = {
-    new MusicalPickup { frequency = 130.81f }, // C3
-    new MusicalPickup { frequency = 155.56f }, // Eb3
-    new MusicalPickup { frequency = 196.00f }, // G3
-    new MusicalPickup { frequency = 261.63f }, // C4
-    new MusicalPickup { frequency = 196.00f }, // G3
-    new MusicalPickup { frequency = 155.56f }, // Eb3
-    new MusicalPickup { frequency = 130.81f }  // C3
-};
-```
-
-## Scene Hierarchy and Components
+4. **Height Calculation**
 
 ```
-UnityAudioProto2
-├── AudioManager
-│   └── MPMAudioAnalyzer (Pitch detection and voice processing)
-├── [BuildingBlock] Camera Rig
-│   ├── Player (Movement controller)
-│   └── TrackingSpace
-│       ├── CenterEyeAnchor
-│       │   └── PitchVisualizer
-│       ├── LeftEyeAnchor
-│       └── RightEyeAnchor
-├── TerrainManager (Procedural terrain generation)
-├── LandmarkManager (Dynamic reference objects)
-├── ReferenceGrid
-├──PickupManager (Musical progression system) [In progress]
-│   ├── PickupManager 
+Height = baseHeight + (log(frequency) - log(minFreq)) / (log(maxFreq) - log(minFreq)) * (maxHeight - baseHeight)
+
+Where:
+- baseHeight = 4 meters (height at 100 Hz)
+- maxHeight = 20 meters (height at maximum frequency)
+- minFreq = 80 Hz (lowest supported note)
+- maxFreq = 300 Hz (highest supported note)
 ```
+
 ### Core Systems
 
 1. **Voice Analysis (MPMAudioAnalyzer)**

@@ -52,7 +52,7 @@ MonoBehaviour:
     m_path: "Assets/Samples/Meta XR Interaction \u200BSDK/71.0.0/Example Scenes/TransformerExamples.unity"
   - m_enabled: 0
     m_path: "Assets/Samples/Meta XR Interaction \u200BSDK/71.0.0/Example Scenes/UISetExamples.unity"
-  - m_enabled: 0
+  - m_enabled: 1
     m_path: Assets/Scenes/UnityAudioProto.unity
   m_ScriptingDefines: []
   m_PlayerSettingsYaml:

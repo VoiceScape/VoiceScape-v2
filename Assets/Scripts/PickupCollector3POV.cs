@@ -28,12 +28,17 @@ public class PickupCollector3POV : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"PickupCollector3POV hit: {other.gameObject.name}");
+        Debug.Log($"OnTriggerEnter with {other.gameObject.name}");
         
-        // Check if it's an active pickup
+        if (pickupManager == null)
+        {
+            Debug.LogError("PickupCollector3POV: pickupManager is null during collision!");
+            return;
+        }
+
         if (pickupManager.IsActivePickup(other.gameObject))
         {
-            Debug.Log("Valid pickup detected - collecting!");
+            Debug.Log($"Valid pickup detected - collecting {other.gameObject.name}");
             pickupManager.OnPickupCollected(other.gameObject);
         }
     }
