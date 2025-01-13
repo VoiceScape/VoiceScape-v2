@@ -1,0 +1,1 @@
+Y:\GitHub\VoiceScape-v2\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\build\intermediates\cxx\RelWithDebInfo\6n105n33\obj\arm64-v8a

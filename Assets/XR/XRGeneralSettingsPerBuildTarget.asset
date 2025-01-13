@@ -16,7 +16,7 @@ MonoBehaviour:
   m_AutomaticLoading: 0
   m_AutomaticRunning: 0
   m_Loaders:
-  - {fileID: 11400000, guid: 88f81a1027acfc94583408a6e7894e6e, type: 2}
+  - {fileID: 11400000, guid: 2acd251aeffe87a49aca9398f7b1161c, type: 2}
 --- !u!114 &-5048612324655791674
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47,7 +47,7 @@ MonoBehaviour:
   m_AutomaticLoading: 0
   m_AutomaticRunning: 0
   m_Loaders:
-  - {fileID: 11400000, guid: 88f81a1027acfc94583408a6e7894e6e, type: 2}
+  - {fileID: 11400000, guid: 2acd251aeffe87a49aca9398f7b1161c, type: 2}
 --- !u!114 &-3110961330947307063
 MonoBehaviour:
   m_ObjectHideFlags: 0

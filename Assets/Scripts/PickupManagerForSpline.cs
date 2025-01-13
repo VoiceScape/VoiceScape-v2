@@ -108,8 +108,12 @@ public class PickupManagerForSpline : MonoBehaviour
         if (activePickup != null)
         {
             // Move pickup toward camera
-            // Vector3 moveDirection = (pickupCollectorForSpline.transform.position - activePickup.transform.position).normalized;
-            // activePickup.transform.position += moveDirection * approachSpeed * Time.deltaTime;
+            var dist = Vector3.Distance(activePickup.transform.position, pickupCollectorForSpline.transform.position);
+
+            if (!(dist < 0.8f)) return;
+            
+            Vector3 moveDirection = (pickupCollectorForSpline.transform.position - activePickup.transform.position).normalized;
+            activePickup.transform.position += moveDirection * approachSpeed * Time.deltaTime;
         }
         else
         {

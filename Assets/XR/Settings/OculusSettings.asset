@@ -15,7 +15,7 @@ MonoBehaviour:
   m_StereoRenderingModeDesktop: 1
   m_StereoRenderingModeAndroid: 2
   SharedDepthBuffer: 1
-  DepthSubmission: 1
+  DepthSubmission: 0
   DashSupport: 1
   LowOverheadMode: 1
   OptimizeBufferDiscards: 1
@@ -23,9 +23,9 @@ MonoBehaviour:
   SymmetricProjection: 1
   SubsampledLayout: 1
   FoveatedRenderingMethod: 2
-  LateLatching: 1
+  LateLatching: 0
   LateLatchingDebug: 0
-  EnableTrackingOriginStageMode: 0
+  EnableTrackingOriginStageMode: 1
   SpaceWarp: 0
   TargetQuest2: 1
   TargetQuestPro: 0
