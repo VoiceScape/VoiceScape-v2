@@ -1,18 +1,13 @@
 using UnityEngine;
-using System.Collections;
 
 public class PlayerMovementController : MonoBehaviour
 {
-    [Header("Audio Movement Settings")]
-    [SerializeField] private float baseHeight = 4f;             // Height at 100 Hz
-    [SerializeField] private float maxHeight = 20f;             // Maximum possible height
-    [SerializeField] private float fallDelay = 1f;              // Time before falling starts
-    
     [Header("ADSR Envelope")]
     [SerializeField] private float attackTime = 0.1f;           // How quickly height responds to voice
     [SerializeField] private float decayTime = 0.2f;            // Transition to sustain level
     [SerializeField] private float sustainLevel = 0.8f;         // Percentage of max amplitude
-    [SerializeField] private float releaseTime = 1.0f;          // How quickly height falls
+    [SerializeField] private float releaseTime = 1.0f;          // How slowly height falls
+    [SerializeField] private float fallDelay = 1f;              // Time before falling starts
     
     [Header("Pitch Modulation")]
     [SerializeField] private float pitchModulationStrength = 1f;// How much pitch affects height
@@ -27,7 +22,7 @@ public class PlayerMovementController : MonoBehaviour
     [SerializeField] private float terrainCheckDistance = 100f; // How far to check for ground
     [SerializeField] private LayerMask terrainLayer;            // Layer for terrain detection
     
-[Header("Debug")]
+    [Header("Debug")]
     [SerializeField] private bool showDebugLogs = false;
     [SerializeField] private bool showTiltDebug = false;
     [SerializeField] private bool showVoiceDebug = false;
@@ -50,6 +45,23 @@ public class PlayerMovementController : MonoBehaviour
     {
         if (showDebugLogs) Debug.Log("PlayerMovementController starting initialization...");
 
+        InitializeComponents();
+        
+        // Initialize starting position at base height
+        currentHeight = PitchHeightCalculator.BaseHeight;
+        if (playerRig != null)
+        {
+            playerRig.position = new Vector3(
+                playerRig.position.x, 
+                PitchHeightCalculator.BaseHeight, 
+                playerRig.position.z
+            );
+            if (showDebugLogs) Debug.Log($"Set initial rig position to: {playerRig.position}");
+        }
+    }
+
+    private void InitializeComponents()
+    {
         // Find the AudioManager and validate hierarchy
         var audioManager = GameObject.Find("AudioManager");
         if (showDebugLogs) Debug.Log($"AudioManager found: {audioManager != null}");
@@ -91,14 +103,6 @@ public class PlayerMovementController : MonoBehaviour
 
         playerRig = transform.parent;
         if (showDebugLogs) Debug.Log($"Player rig assigned: {playerRig != null}, name: {playerRig?.name}");
-
-        // Initialize starting position
-        currentHeight = baseHeight;
-        if (playerRig != null)
-        {
-            playerRig.position = new Vector3(playerRig.position.x, baseHeight, playerRig.position.z);
-            if (showDebugLogs) Debug.Log($"Set initial rig position to: {playerRig.position}");
-        }
     }
 
     private void Update()
@@ -113,26 +117,32 @@ public class PlayerMovementController : MonoBehaviour
         {
             lastVoiceTime = Time.time;
             
-            // Calculate base height from amplitude
-            float amplitudeHeight = Mathf.Lerp(baseHeight, maxHeight, audioAnalyzer.Amplitude);
+            // Get full target height from pitch - no amplitude scaling
+            float baseTargetHeight = PitchHeightCalculator.GetHeightForFrequency(audioAnalyzer.Frequency);
             
-            // Add pitch modulation
-            float pitchOffset = (audioAnalyzer.Frequency - 100f) / 200f * pitchModulationStrength;
+            // Add pitch modulation if needed
+            float pitchOffset = (audioAnalyzer.Frequency - PitchHeightCalculator.MinFrequency) / 
+                              (PitchHeightCalculator.MaxFrequency - PitchHeightCalculator.MinFrequency) * 
+                              pitchModulationStrength;
             smoothedPitchOffset = Mathf.SmoothDamp(smoothedPitchOffset, pitchOffset, ref velocityY, pitchSmoothTime);
             
             // Update envelope
             envelopeValue = UpdateEnvelope(true);
             
-            // Combine height components
-            targetHeight = (amplitudeHeight + smoothedPitchOffset) * envelopeValue;
+            // Use full height when voice is detected
+            targetHeight = baseTargetHeight * envelopeValue;
 
-            if (showVoiceDebug) Debug.Log($"Voice - Amp: {audioAnalyzer.Amplitude:F2}, Freq: {audioAnalyzer.Frequency:F0}Hz, Height: {targetHeight:F1}m");
+            if (showVoiceDebug) 
+            {
+                Debug.Log($"Voice - Freq: {audioAnalyzer.Frequency:F0}Hz, " +
+                         $"Height: {targetHeight:F1}m");
+            }
         }
         else if (Time.time - lastVoiceTime > fallDelay)
         {
             // Update envelope for release
             envelopeValue = UpdateEnvelope(false);
-            targetHeight = baseHeight * envelopeValue;
+            targetHeight = PitchHeightCalculator.BaseHeight * envelopeValue;
         }
 
         // Smooth height movement
@@ -145,7 +155,32 @@ public class PlayerMovementController : MonoBehaviour
         playerRig.position = position;
     }
 
-    private Vector3 lastForward;
+
+    private float UpdateEnvelope(bool isActive)
+    {
+        float newEnvelopeValue = envelopeValue;
+        
+        if (isActive)
+        {
+            if (newEnvelopeValue < 1f)
+            {
+                // Attack phase
+                newEnvelopeValue += Time.deltaTime / attackTime;
+            }
+            else if (newEnvelopeValue > sustainLevel)
+            {
+                // Decay phase
+                newEnvelopeValue -= Time.deltaTime / decayTime;
+            }
+        }
+        else
+        {
+            // Release phase
+            newEnvelopeValue -= Time.deltaTime / releaseTime;
+        }
+        
+        return Mathf.Clamp01(newEnvelopeValue);
+    }
 
     private void UpdateTiltMovement()
     {
@@ -182,32 +217,6 @@ public class PlayerMovementController : MonoBehaviour
         {
             Debug.Log($"Tilt: angle={currentTiltAngle:F1}°, speed={speed:F2}");
         }
-    }
-
-    private float UpdateEnvelope(bool isActive)
-    {
-        float newEnvelopeValue = envelopeValue;
-        
-        if (isActive)
-        {
-            if (newEnvelopeValue < 1f)
-            {
-                // Attack phase
-                newEnvelopeValue += Time.deltaTime / attackTime;
-            }
-            else if (newEnvelopeValue > sustainLevel)
-            {
-                // Decay phase
-                newEnvelopeValue -= Time.deltaTime / decayTime;
-            }
-        }
-        else
-        {
-            // Release phase
-            newEnvelopeValue -= Time.deltaTime / releaseTime;
-        }
-        
-        return Mathf.Clamp01(newEnvelopeValue);
     }
 
     private float GetTerrainHeight()

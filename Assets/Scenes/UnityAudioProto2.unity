@@ -2093,7 +2093,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &545860022
 Transform:
   m_ObjectHideFlags: 0
@@ -3725,7 +3725,7 @@ SphereCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
@@ -5862,13 +5862,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a9dcd215859b3940b56db13c9086de0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseHeight: 4
-  maxHeight: 20
-  fallDelay: 1
   attackTime: 0.2
   decayTime: 0.2
-  sustainLevel: 0.8
+  sustainLevel: 1
   releaseTime: 1
+  fallDelay: 1
   pitchModulationStrength: 1
   pitchSmoothTime: 0.1
   maxTiltSpeed: 3
@@ -8473,28 +8471,22 @@ MonoBehaviour:
   audioAnalyzer: {fileID: 1427782867}
   currentPitchSphere: {fileID: 1284181229}
   targetPitchSphere: {fileID: 870047330}
+  playerRig: {fileID: 651530572}
   visualizerDistance: 2
-  maxVerticalAngle: 30
-  verticalOffset: 1.84
   sphereBaseScale: 0.05
   targetFrequency: 130.81
   frequencyTolerance: 5
   targetColor: {r: 0.2, g: 1, b: 0.2, a: 0.8}
   normalColor: {r: 0.2, g: 0.6, b: 1, a: 0.8}
   closeColor: {r: 1, g: 0.8, b: 0.2, a: 0.8}
+  matchedColor: {r: 1, g: 0, b: 0, a: 1}
   positionSmoothTime: 0.15
   colorSmoothTime: 0.1
   scaleSmooth: 5
-  minFrequency: 80
-  maxFrequency: 300
-  perfectMatchThreshold: 2
-  matchedColor: {r: 1, g: 0, b: 0, a: 1}
   currentFrequencyLabel: {fileID: 895829352}
   confidenceLabel: {fileID: 828645900}
-  minFreqLabel: {fileID: 1513868729}
-  maxFreqLabel: {fileID: 1829645868}
   targetFrequencyLabel: {fileID: 1891161454}
-  labelOffset: 0.15
+  labelOffset: 0
 --- !u!1 &1501433169
 GameObject:
   m_ObjectHideFlags: 0
@@ -9920,7 +9912,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   noiseScale: 50
-  heightScale: 1
+  heightScale: 2
   scrollSpeed: {x: 0.1, y: 0.1}
   chunkSize: 10
   viewDistance: 5
@@ -10550,7 +10542,7 @@ SphereCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
@@ -10781,7 +10773,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1817958836
 RectTransform:
   m_ObjectHideFlags: 0
@@ -12859,9 +12851,6 @@ MonoBehaviour:
   pitchVisualizer: {fileID: 1499074007}
   visualizerDistance: 7
   depthSpacing: 7
-  baseHeight: 4
-  maxHeight: 20
-  pitchModulationStrength: 1
   pickupPrefab: {fileID: 2990117265080535778, guid: 43fda47e2cec8424aa9452e770e42362, type: 3}
   pickupScale: {x: 0.5, y: 0.5, z: 0.5}
   baseNote: {fileID: 8300000, guid: 254be282ccbcb9440843c7c122646ab8, type: 3}
@@ -13367,7 +13356,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2113345427
 RectTransform:
   m_ObjectHideFlags: 0

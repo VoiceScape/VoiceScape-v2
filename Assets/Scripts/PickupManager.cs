@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
@@ -20,11 +21,6 @@ public class PickupManager : MonoBehaviour
     [SerializeField] private float visualizerDistance = 40f;
     [SerializeField] private float depthSpacing = 5f;
 
-    [Header("Height Mapping")]
-    [SerializeField] private float baseHeight = 4f;             // Height at 100 Hz
-    [SerializeField] private float maxHeight = 20f;             // Maximum possible height
-    [SerializeField] private float pitchModulationStrength = 1f;// Match with PlayerMovementController
-
     [Header("Pickup Configuration")]
     [SerializeField] private GameObject pickupPrefab;
     [SerializeField] private Vector3 pickupScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -43,21 +39,30 @@ public class PickupManager : MonoBehaviour
     private Transform centerEyeAnchor;
 
     // Musical sequence: G2 → Bb2 → C3 → Eb3 → C3 → Bb2 → G2
-    private MusicalPickup[] sequence = new MusicalPickup[]
+    new MusicalPickup[] sequence = new MusicalPickup[]
     {
-        new MusicalPickup { frequency = 98.00f,  color = new Color(0f, 0f, 1f, 0.8f) },    // G2
-        new MusicalPickup { frequency = 116.54f, color = new Color(0f, 1f, 0f, 0.8f) },    // Bb2
-        new MusicalPickup { frequency = 130.81f, color = new Color(1f, 1f, 0f, 0.8f) },    // C3
-        new MusicalPickup { frequency = 155.56f, color = new Color(1f, 0f, 0f, 0.8f) },    // Eb3
-        new MusicalPickup { frequency = 130.81f, color = new Color(1f, 1f, 0f, 0.8f) },    // C3
-        new MusicalPickup { frequency = 116.54f, color = new Color(0f, 1f, 0f, 0.8f) },    // Bb2
-        new MusicalPickup { frequency = 98.00f,  color = new Color(0f, 0f, 1f, 0.8f) }     // G2
+        new MusicalPickup { frequency = 110.00f,  color = new Color(0f, 0f, 1f, 0.8f) },    // A2
+        new MusicalPickup { frequency = 130.81f,  color = new Color(0f, 1f, 0f, 0.8f) },    // C3
+        new MusicalPickup { frequency = 146.83f,  color = new Color(1f, 1f, 0f, 0.8f) },    // D3
+        new MusicalPickup { frequency = 174.61f,  color = new Color(1f, 0f, 0f, 0.8f) },    // F3
+        new MusicalPickup { frequency = 146.83f,  color = new Color(1f, 1f, 0f, 0.8f) },    // D3
+        new MusicalPickup { frequency = 130.81f,  color = new Color(0f, 1f, 0f, 0.8f) },    // C3
+        new MusicalPickup { frequency = 110.00f,  color = new Color(0f, 0f, 1f, 0.8f) }     // A2
     };
 
     private void Start()
     {
         Debug.Log("PickupManager Start called");
         
+        InitializeComponents();
+        InitializeAudioSources();
+        
+        // Delay the start of the pickup sequence
+        StartCoroutine(DelayedStart());
+    }
+
+    private void InitializeComponents()
+    {
         if (cameraRig == null)
         {
             cameraRig = GameObject.Find("[BuildingBlock] Camera Rig")?.transform;
@@ -71,14 +76,9 @@ public class PickupManager : MonoBehaviour
             Debug.LogError("Could not find CenterEyeAnchor!");
             return;
         }
-
-        InitializeAudioSources();
-        
-        // Delay the start of the pickup sequence
-        StartCoroutine(DelayedStart());
     }
 
-    private System.Collections.IEnumerator DelayedStart()
+    private IEnumerator DelayedStart()
     {
         Debug.Log("Waiting 3 seconds before starting pickup sequence...");
         yield return new WaitForSeconds(5f);
@@ -148,20 +148,6 @@ public class PickupManager : MonoBehaviour
         }
     }
 
-    private float CalculatePickupHeight(float frequency)
-    {
-        if (pitchVisualizer == null)
-        {
-            Debug.LogError("Missing PitchVisualizer!");
-            return baseHeight;
-        }
-
-        Vector3 targetPos = pitchVisualizer.GetPositionForFrequency(frequency);
-        Debug.LogError($"[PICKUP_HEIGHT] For {frequency}Hz:" +
-                      $"\nCalculated height: {targetPos.y}");
-        return targetPos.y;
-    }
-
     private void SpawnCurrentPickup()
     {
         if (currentPickupIndex >= sequence.Length)
@@ -175,19 +161,18 @@ public class PickupManager : MonoBehaviour
         {
             float freq = sequence[currentPickupIndex].frequency;
             pitchVisualizer.targetFrequency = freq;
-            Debug.LogError($"[SPAWN_DEBUG] Begin spawn for {freq}Hz:" +
-                         $"\nCamera Position: {centerEyeAnchor.position}" +
-                         $"\nCamera Forward: {centerEyeAnchor.forward}" +
-                         $"\nVisualizer Distance: {visualizerDistance}" +
-                         $"\nTarget Sphere Position: {pitchVisualizer.targetPitchSphere.position}");
+            Debug.Log($"[SPAWN_DEBUG] Begin spawn for {freq}Hz:" +
+                     $"\nCamera Position: {centerEyeAnchor.position}" +
+                     $"\nCamera Forward: {centerEyeAnchor.forward}" +
+                     $"\nVisualizer Distance: {visualizerDistance}");
         }
 
-        // Calculate spawn position in front of player
+        // Calculate spawn position in front of player using PitchHeightCalculator
         Vector3 forward = Vector3.ProjectOnPlane(centerEyeAnchor.forward, Vector3.up).normalized;
         Vector3 spawnPos = centerEyeAnchor.position + (forward * visualizerDistance);
-        spawnPos.y = CalculatePickupHeight(sequence[currentPickupIndex].frequency);
+        spawnPos.y = PitchHeightCalculator.GetHeightForFrequency(sequence[currentPickupIndex].frequency);
 
-        Debug.LogError($"[SPAWN_DEBUG] Final spawn position: {spawnPos}");
+        Debug.Log($"[SPAWN_DEBUG] Final spawn position: {spawnPos}");
 
         GameObject pickupObj = Instantiate(pickupPrefab);
         pickupObj.transform.position = spawnPos;
@@ -277,7 +262,9 @@ public class PickupManager : MonoBehaviour
 
     private void OnSequenceComplete()
     {
-        Debug.Log("Musical sequence completed!");
+        Debug.Log("Musical sequence completed! Looping back to start...");
+        currentPickupIndex = 0;  // Reset to start
         droneAudioSource.Stop();
+        
     }
 }
