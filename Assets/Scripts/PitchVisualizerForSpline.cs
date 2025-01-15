@@ -279,22 +279,31 @@ public class PitchVisualizerForSpline : MonoBehaviour
 
     private void UpdateSpherePositions()
     {
+        if (!audioAnalyzer.IsVoiceDetected)
+        {
+            // currentPitchSphere.position = Vector3.SmoothDamp(
+            //     currentPitchSphere.position,
+            //     noInputTransform.position,
+            //     ref currentVelocity,
+            //     positionSmoothTime
+            // );
+            
+            return;
+        }
+
         Vector3 targetPos = GetPositionForFrequency(audioAnalyzer.Frequency);
         
+        currentPitchSphere.position = Vector3.SmoothDamp(
+            currentPitchSphere.position,
+            targetPos,
+            ref currentVelocity,
+            positionSmoothTime
+        );
+
         // Set target sphere position
         targetPitchSphere.position = GetPositionForFrequency(targetFrequency);
 
         UpdateSphereVisuals();
-        
-        if (audioAnalyzer.IsVoiceDetected)
-        {
-            currentPitchSphere.position = Vector3.SmoothDamp(
-                currentPitchSphere.position,
-                targetPos,
-                ref currentVelocity,
-                positionSmoothTime
-            );
-        }
     }
 
     private void UpdateLabels()
