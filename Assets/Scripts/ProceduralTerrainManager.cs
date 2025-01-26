@@ -106,8 +106,8 @@ public class ProceduralTerrainManager : MonoBehaviour
         meshCollider.enabled = true;  // Ensure collider is enabled
         
         // Debug log collider setup
-/*         Debug.LogError($"Created chunk at {coord} with collider on layer {chunk.layer}");
-        Debug.LogError($"Collider bounds: {meshCollider.bounds}"); */
+        // Debug.LogError($"Created chunk at {coord} with collider on layer {chunk.layer}");
+        // Debug.LogError($"Collider bounds: {meshCollider.bounds}");
         
         meshRenderer.material = terrainMaterial;
         

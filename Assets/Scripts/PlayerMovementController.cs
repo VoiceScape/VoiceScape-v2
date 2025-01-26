@@ -3,34 +3,23 @@ using UnityEngine;
 public class PlayerMovementController : MonoBehaviour
 {
     [Header("ADSR Envelope")]
-    [SerializeField] private float attackTime = 0.1f;           // How quickly height responds to voice
-    [SerializeField] private float decayTime = 0.2f;            // Transition to sustain level
-    [SerializeField] private float sustainLevel = 0.8f;         // Percentage of max amplitude
-    [SerializeField] private float releaseTime = 1.0f;          // How slowly height falls
-    [SerializeField] private float fallDelay = 1f;              // Time before falling starts
-    
-    [Header("Pitch Modulation")]
-    [SerializeField] private float pitchModulationStrength = 1f;// How much pitch affects height
-    [SerializeField] private float pitchSmoothTime = 0.1f;      // Smoothing for pitch changes
+    [SerializeField] private float attackTime = 0.1f;
+    [SerializeField] private float decayTime = 0.1f;  // Shorter decay since going to full sustain
+    [SerializeField] private float sustainLevel = 1.0f;  // Full sustain
+    [SerializeField] private float releaseTime = 0.5f;  // Quicker release for responsiveness
     
     [Header("Tilt Movement")]
-    [SerializeField] private float maxTiltSpeed = 2f;           // Maximum movement speed
-    [SerializeField] private float tiltDeadzone = 5f;           // Degrees of tilt to ignore
-    [SerializeField] private Vector2 tiltRange = new Vector2(0f, 45f); // Min/Max tilt angles
-    
-    [Header("Ground Following")]
-    [SerializeField] private float terrainCheckDistance = 100f; // How far to check for ground
-    [SerializeField] private LayerMask terrainLayer;            // Layer for terrain detection
+    [SerializeField] private float maxTiltSpeed = 2f;
+    [SerializeField] private float tiltDeadzone = 5f;
+    [SerializeField] private Vector2 tiltRange = new Vector2(0f, 45f);
     
     [Header("Debug")]
     [SerializeField] private bool showDebugLogs = false;
-    [SerializeField] private bool showTiltDebug = false;
-    [SerializeField] private bool showVoiceDebug = false;
     
     // Component references
     private MPMAudioAnalyzer audioAnalyzer;
-    private Transform cameraTransform;  // CenterEyeAnchor
-    private Transform playerRig;        // Parent Camera Rig
+    private Transform cameraTransform;
+    private Transform playerRig;
     
     // State tracking
     private float currentHeight;
@@ -38,39 +27,21 @@ public class PlayerMovementController : MonoBehaviour
     private float lastVoiceTime;
     private float envelopeValue;
     private Vector3 currentVelocity;
-    private float smoothedPitchOffset;
     private float velocityY;
 
     private void Start()
     {
-        if (showDebugLogs) Debug.Log("PlayerMovementController starting initialization...");
-
         InitializeComponents();
-        
-        // Initialize starting position at base height
-        currentHeight = PitchHeightCalculator.BaseHeight;
-        if (playerRig != null)
-        {
-            playerRig.position = new Vector3(
-                playerRig.position.x, 
-                PitchHeightCalculator.BaseHeight, 
-                playerRig.position.z
-            );
-            if (showDebugLogs) Debug.Log($"Set initial rig position to: {playerRig.position}");
-        }
+        InitializeHeight();
     }
 
     private void InitializeComponents()
     {
-        // Find the AudioManager and validate hierarchy
+        // Find and validate AudioAnalyzer
         var audioManager = GameObject.Find("AudioManager");
-        if (showDebugLogs) Debug.Log($"AudioManager found: {audioManager != null}");
-
         if (audioManager != null)
         {
             audioAnalyzer = audioManager.GetComponent<MPMAudioAnalyzer>();
-            if (showDebugLogs) Debug.Log($"MPMAudioAnalyzer component found: {audioAnalyzer != null}");
-            
             if (audioAnalyzer == null)
             {
                 Debug.LogError("Could not find MPMAudioAnalyzer on AudioManager!");
@@ -78,31 +49,33 @@ public class PlayerMovementController : MonoBehaviour
                 return;
             }
         }
-        else
-        {
-            Debug.LogError("Could not find AudioManager in scene!");
-            enabled = false;
-            return;
-        }
 
-        // Find VR camera references using exact path
+        // Find VR camera references
         Transform trackingSpace = transform.parent.Find("TrackingSpace");
-        if (showDebugLogs) Debug.Log($"TrackingSpace found: {trackingSpace != null}");
-
         if (trackingSpace != null)
         {
             cameraTransform = trackingSpace.Find("CenterEyeAnchor");
-            if (showDebugLogs) Debug.Log($"CenterEyeAnchor found: {cameraTransform != null}");
             if (cameraTransform == null)
             {
-                Debug.LogError("Could not find CenterEyeAnchor! Check VR camera rig hierarchy.");
+                Debug.LogError("Could not find CenterEyeAnchor!");
                 enabled = false;
                 return;
             }
         }
 
         playerRig = transform.parent;
-        if (showDebugLogs) Debug.Log($"Player rig assigned: {playerRig != null}, name: {playerRig?.name}");
+    }
+
+    private void InitializeHeight()
+    {
+        // Initialize at base height
+        currentHeight = SceneManager.Instance.GetSafeHeight(SceneManager.Instance.baseHeight);
+        if (playerRig != null)
+        {
+            Vector3 pos = playerRig.position;
+            pos.y = currentHeight;
+            playerRig.position = pos;
+        }
     }
 
     private void Update()
@@ -117,114 +90,83 @@ public class PlayerMovementController : MonoBehaviour
         {
             lastVoiceTime = Time.time;
             
-            // Get full target height from pitch - no amplitude scaling
-            float baseTargetHeight = PitchHeightCalculator.GetHeightForFrequency(audioAnalyzer.Frequency);
-            
-            // Add pitch modulation if needed
-            float pitchOffset = (audioAnalyzer.Frequency - PitchHeightCalculator.MinFrequency) / 
-                              (PitchHeightCalculator.MaxFrequency - PitchHeightCalculator.MinFrequency) * 
-                              pitchModulationStrength;
-            smoothedPitchOffset = Mathf.SmoothDamp(smoothedPitchOffset, pitchOffset, ref velocityY, pitchSmoothTime);
+            // Get target height from frequency
+            float rawTargetHeight = PitchHeightCalculator.GetHeightForFrequency(audioAnalyzer.Frequency);
+            targetHeight = SceneManager.Instance.GetSafeHeight(rawTargetHeight);
             
             // Update envelope
             envelopeValue = UpdateEnvelope(true);
-            
-            // Use full height when voice is detected
-            targetHeight = baseTargetHeight * envelopeValue;
-
-            if (showVoiceDebug) 
-            {
-                Debug.Log($"Voice - Freq: {audioAnalyzer.Frequency:F0}Hz, " +
-                         $"Height: {targetHeight:F1}m");
-            }
         }
-        else if (Time.time - lastVoiceTime > fallDelay)
+        else if (Time.time - lastVoiceTime > 1f)
         {
-            // Update envelope for release
             envelopeValue = UpdateEnvelope(false);
-            targetHeight = PitchHeightCalculator.BaseHeight * envelopeValue;
+            targetHeight = SceneManager.Instance.GetSafeHeight(SceneManager.Instance.baseHeight);
         }
 
-        // Smooth height movement
-        float smoothTime = audioAnalyzer.IsVoiceDetected ? attackTime : releaseTime;
-        currentHeight = Mathf.SmoothDamp(currentHeight, targetHeight, ref velocityY, smoothTime);
-        
-        // Update position of the entire rig
-        Vector3 position = playerRig.position;
-        position.y = currentHeight + GetTerrainHeight();
-        playerRig.position = position;
-    }
+        // Apply envelope to height difference from base
+        float baseHeight = SceneManager.Instance.baseHeight;
+        float heightDifference = targetHeight - baseHeight;
+        float targetHeightWithEnvelope = baseHeight + (heightDifference * envelopeValue);
 
+        // Smooth transition
+        float smoothTime = audioAnalyzer.IsVoiceDetected ? attackTime : releaseTime;
+        currentHeight = Mathf.SmoothDamp(currentHeight, targetHeightWithEnvelope, ref velocityY, smoothTime);
+        
+        // Update rig position
+        if (playerRig != null)
+        {
+            Vector3 position = playerRig.position;
+            position.y = currentHeight;
+            playerRig.position = position;
+        }
+
+        if (showDebugLogs)
+        {
+            Debug.Log($"Height: {currentHeight:F2}m, Target: {targetHeight:F2}m, Freq: {audioAnalyzer.Frequency:F0}Hz");
+        }
+    }
 
     private float UpdateEnvelope(bool isActive)
     {
-        float newEnvelopeValue = envelopeValue;
+        float newValue = envelopeValue;
         
         if (isActive)
         {
-            if (newEnvelopeValue < 1f)
-            {
-                // Attack phase
-                newEnvelopeValue += Time.deltaTime / attackTime;
-            }
-            else if (newEnvelopeValue > sustainLevel)
-            {
-                // Decay phase
-                newEnvelopeValue -= Time.deltaTime / decayTime;
-            }
+            if (newValue < 1f)
+                newValue += Time.deltaTime / attackTime;
+            else if (newValue > sustainLevel)
+                newValue -= Time.deltaTime / decayTime;
         }
         else
-        {
-            // Release phase
-            newEnvelopeValue -= Time.deltaTime / releaseTime;
-        }
+            newValue -= Time.deltaTime / releaseTime;
         
-        return Mathf.Clamp01(newEnvelopeValue);
+        return Mathf.Clamp01(newValue);
     }
 
     private void UpdateTiltMovement()
     {
         if (cameraTransform == null) return;
 
-        // Get head tilt angle
         float currentTiltAngle = Vector3.SignedAngle(Vector3.up, cameraTransform.up, Vector3.right);
-        
-        // Calculate movement direction (forward in gaze direction)
         Vector3 movement = Vector3.ProjectOnPlane(cameraTransform.forward, Vector3.up).normalized;
         
-        // Base movement speed
-        float speed = maxTiltSpeed * 0.3f; // 30% of max speed as base speed
+        float speed = maxTiltSpeed * 0.3f;
         
-        // Modify speed based on tilt
-        if (currentTiltAngle > tiltDeadzone) // Forward tilt
+        if (currentTiltAngle > tiltDeadzone)
         {
-            // Scale additional speed by forward tilt amount
             float tiltScale = Mathf.InverseLerp(tiltDeadzone, tiltRange.y, currentTiltAngle);
-            speed += maxTiltSpeed * 0.7f * tiltScale; // Add up to 70% more speed
+            speed += maxTiltSpeed * 0.7f * tiltScale;
         }
-        else if (currentTiltAngle < -tiltDeadzone) // Backward tilt
+        else if (currentTiltAngle < -tiltDeadzone)
         {
-            // Rapidly reduce speed based on backward tilt
             float tiltScale = Mathf.InverseLerp(-tiltDeadzone, -tiltRange.y, currentTiltAngle);
-            speed *= (1f - tiltScale); // Reduce speed to 0 at max backward tilt
+            speed *= (1f - tiltScale);
         }
         
-        // Apply movement
         Vector3 delta = movement * speed * Time.deltaTime;
-        playerRig.position += delta;
-
-        if (showTiltDebug)
+        if (playerRig != null)
         {
-            Debug.Log($"Tilt: angle={currentTiltAngle:F1}°, speed={speed:F2}");
+            playerRig.position += delta;
         }
-    }
-
-    private float GetTerrainHeight()
-    {
-        if (Physics.Raycast(playerRig.position + Vector3.up * 100f, Vector3.down, out RaycastHit hit, terrainCheckDistance, terrainLayer))
-        {
-            return hit.point.y;
-        }
-        return 0f;
     }
 }

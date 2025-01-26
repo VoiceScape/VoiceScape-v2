@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
@@ -34,35 +33,26 @@ public class PickupManager : MonoBehaviour
 
     private AudioSource droneAudioSource;
     private AudioSource successAudioSource;
-    private List<GameObject> activePickups = new List<GameObject>();
-    private int currentPickupIndex = 0;
+    public List<GameObject> activePickups = new List<GameObject>();
+    public int currentPickupIndex = 0;
     private Transform centerEyeAnchor;
 
     // Musical sequence: G2 → Bb2 → C3 → Eb3 → C3 → Bb2 → G2
-    new MusicalPickup[] sequence = new MusicalPickup[]
+    public MusicalPickup[] sequence = new MusicalPickup[]
     {
-        new MusicalPickup { frequency = 110.00f,  color = new Color(0f, 0f, 1f, 0.8f) },    // A2
-        new MusicalPickup { frequency = 130.81f,  color = new Color(0f, 1f, 0f, 0.8f) },    // C3
-        new MusicalPickup { frequency = 146.83f,  color = new Color(1f, 1f, 0f, 0.8f) },    // D3
-        new MusicalPickup { frequency = 174.61f,  color = new Color(1f, 0f, 0f, 0.8f) },    // F3
-        new MusicalPickup { frequency = 146.83f,  color = new Color(1f, 1f, 0f, 0.8f) },    // D3
-        new MusicalPickup { frequency = 130.81f,  color = new Color(0f, 1f, 0f, 0.8f) },    // C3
-        new MusicalPickup { frequency = 110.00f,  color = new Color(0f, 0f, 1f, 0.8f) }     // A2
+        new MusicalPickup { frequency = 98.00f,  color = new Color(0f, 0f, 1f, 0.8f) },    // G2
+        new MusicalPickup { frequency = 116.54f, color = new Color(0f, 1f, 0f, 0.8f) },    // Bb2
+        new MusicalPickup { frequency = 130.81f, color = new Color(1f, 1f, 0f, 0.8f) },    // C3
+        new MusicalPickup { frequency = 155.56f, color = new Color(1f, 0f, 0f, 0.8f) },    // Eb3
+        new MusicalPickup { frequency = 130.81f, color = new Color(1f, 1f, 0f, 0.8f) },    // C3
+        new MusicalPickup { frequency = 116.54f, color = new Color(0f, 1f, 0f, 0.8f) },    // Bb2
+        new MusicalPickup { frequency = 98.00f,  color = new Color(0f, 0f, 1f, 0.8f) }     // G2
     };
 
     private void Start()
     {
         Debug.Log("PickupManager Start called");
         
-        InitializeComponents();
-        InitializeAudioSources();
-        
-        // Delay the start of the pickup sequence
-        StartCoroutine(DelayedStart());
-    }
-
-    private void InitializeComponents()
-    {
         if (cameraRig == null)
         {
             cameraRig = GameObject.Find("[BuildingBlock] Camera Rig")?.transform;
@@ -76,12 +66,17 @@ public class PickupManager : MonoBehaviour
             Debug.LogError("Could not find CenterEyeAnchor!");
             return;
         }
+
+        InitializeAudioSources();
+        
+        // Delay the start of the pickup sequence
+        StartCoroutine(DelayedStart());
     }
 
-    private IEnumerator DelayedStart()
+    private System.Collections.IEnumerator DelayedStart()
     {
-        Debug.Log("Waiting 3 seconds before starting pickup sequence...");
-        yield return new WaitForSeconds(5f);
+        Debug.Log("Waiting 10 seconds before starting pickup sequence...");
+        yield return new WaitForSeconds(10.0f);
         Debug.Log("Starting pickup sequence");
         SpawnCurrentPickup();  // Spawn first pickup
     }
@@ -148,8 +143,23 @@ public class PickupManager : MonoBehaviour
         }
     }
 
-    private void SpawnCurrentPickup()
+    private float CalculatePickupHeight(float frequency)
     {
+        if (pitchVisualizer == null)
+        {
+            Debug.LogError("Missing PitchVisualizer!");
+            return SceneManager.Instance.baseHeight;  // Use SceneManager's baseHeight instead
+        }
+
+        Vector3 targetPos = pitchVisualizer.GetPositionForFrequency(frequency);
+        Debug.LogError($"[PICKUP_HEIGHT] For {frequency}Hz:" +
+                      $"\nCalculated height: {targetPos.y}");
+        return targetPos.y;
+    }
+
+
+    private void SpawnCurrentPickup()
+    {   
         if (currentPickupIndex >= sequence.Length)
         {
             Debug.Log("Sequence complete!");
@@ -161,18 +171,17 @@ public class PickupManager : MonoBehaviour
         {
             float freq = sequence[currentPickupIndex].frequency;
             pitchVisualizer.targetFrequency = freq;
-            Debug.Log($"[SPAWN_DEBUG] Begin spawn for {freq}Hz:" +
-                     $"\nCamera Position: {centerEyeAnchor.position}" +
-                     $"\nCamera Forward: {centerEyeAnchor.forward}" +
-                     $"\nVisualizer Distance: {visualizerDistance}");
         }
 
-        // Calculate spawn position in front of player using PitchHeightCalculator
+        // Calculate spawn position in front of player
         Vector3 forward = Vector3.ProjectOnPlane(centerEyeAnchor.forward, Vector3.up).normalized;
         Vector3 spawnPos = centerEyeAnchor.position + (forward * visualizerDistance);
-        spawnPos.y = PitchHeightCalculator.GetHeightForFrequency(sequence[currentPickupIndex].frequency);
 
-        Debug.Log($"[SPAWN_DEBUG] Final spawn position: {spawnPos}");
+        // Set height directly from frequency
+        float currentFrequency = sequence[currentPickupIndex].frequency;
+        spawnPos.y = PitchHeightCalculator.GetHeightForFrequency(currentFrequency);
+
+        Debug.Log($"Spawning pickup - Freq: {currentFrequency}Hz, Height: {spawnPos.y:F2}m");
 
         GameObject pickupObj = Instantiate(pickupPrefab);
         pickupObj.transform.position = spawnPos;
@@ -198,6 +207,7 @@ public class PickupManager : MonoBehaviour
         if (buddhaPickup != null)
         {
             buddhaPickup.SetColor(sequence[currentPickupIndex].color);
+            buddhaPickup.SetFrequency(sequence[currentPickupIndex].frequency);
         }
 
         activePickups.Add(pickupObj);
@@ -262,9 +272,7 @@ public class PickupManager : MonoBehaviour
 
     private void OnSequenceComplete()
     {
-        Debug.Log("Musical sequence completed! Looping back to start...");
-        currentPickupIndex = 0;  // Reset to start
+        Debug.Log("Musical sequence completed!");
         droneAudioSource.Stop();
-        
     }
 }

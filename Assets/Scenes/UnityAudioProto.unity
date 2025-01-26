@@ -3420,7 +3420,7 @@ SkinnedMeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 650237719}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -3476,7 +3476,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 650237719}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 73eac66b128fc8749a21623225c34541, type: 3}
   m_Name: 
@@ -3493,12 +3493,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 650237719}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5cc5c234723e3a54d8dd09b131117743, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _meshType: 0
+  _meshType: 4
 --- !u!114 &650237724
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3529,7 +3529,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2609c54f376cffc4da1ab9401cc1a36f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _skeletonType: 0
+  _skeletonType: 4
   _updateRootPose: 0
   _updateRootScale: 1
   _enablePhysicsCapsules: 0
@@ -4393,7 +4393,7 @@ SkinnedMeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 763767373}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -4449,7 +4449,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 763767373}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 73eac66b128fc8749a21623225c34541, type: 3}
   m_Name: 
@@ -4466,12 +4466,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 763767373}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5cc5c234723e3a54d8dd09b131117743, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _meshType: 1
+  _meshType: 5
 --- !u!114 &763767378
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4502,7 +4502,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2609c54f376cffc4da1ab9401cc1a36f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _skeletonType: 1
+  _skeletonType: 5
   _updateRootPose: 0
   _updateRootScale: 1
   _enablePhysicsCapsules: 0
@@ -6814,7 +6814,7 @@ GameObject:
   - component: {fileID: 1017389020}
   - component: {fileID: 1017389021}
   m_Layer: 6
-  m_Name: PickupManager3POV
+  m_Name: PickupManager3POV2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6844,85 +6844,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1017389018}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0659cb9f83e784b49a884acf605fba71, type: 3}
+  m_Script: {fileID: 11500000, guid: 2ad0c820b00437e4aaf24d42b534ba9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraRig: {fileID: 651530572}
-  pitchVisualizer: {fileID: 1499074007}
-  pickupPrefab: {fileID: 2990117265080535778, guid: 43fda47e2cec8424aa9452e770e42362, type: 3}
-  spawnDistance: 10
-  approachSpeed: 2
-  pickupScale: {x: 0.3, y: 0.3, z: 0.3}
-  baseNote: {fileID: 8300000, guid: 254be282ccbcb9440843c7c122646ab8, type: 3}
-  successSound: {fileID: 8300000, guid: 79af3540ff8c5564098e04cd28f3c38e, type: 3}
-  droneVolume: 0.7
-  successVolume: 0.9
-  baseFrequency: 130.81
-  vocalRangePanel: {fileID: 1750364936}
-  rangeReportText: {fileID: 1749615770}
-  continueButton: {fileID: 213519226}
-  fadeInDuration: 0.5
-  sequence:
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
-  - frequency: 0
-    color: {r: 0, g: 0, b: 0, a: 0}
-    tolerance: 0
-    isCollected: 0
-    missedAttempts: 0
 --- !u!1 &1022857641
 GameObject:
   m_ObjectHideFlags: 0
@@ -9900,17 +9824,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioAnalyzer: {fileID: 1427782867}
-  currentPitchSphere: {fileID: 1284181229}
-  targetPitchSphere: {fileID: 870047330}
-  cameraRig: {fileID: 651530572}
+  currentPitchSphere: {fileID: 895829350}
+  targetPitchSphere: {fileID: 1891161453}
+  cameraRig: {fileID: 1943633599}
   showTargetSphere: 1
   targetSphereDistance: 1
   baseHeight: 0.5
   maxHeight: 2.5
   minFrequency: 80
-  maxFrequency: 600
+  maxFrequency: 300
   targetFrequency: 130.81
-  baseHeightConfidenceThreshold: 0.484
+  baseHeightConfidenceThreshold: 0.7
   releaseTime: 1
   sphereBaseScale: 0.05
   targetColor: {r: 0, g: 1, b: 0, a: 0.8}
@@ -9927,8 +9851,8 @@ MonoBehaviour:
   showConfidenceLabel: 1
   labelOffset: 0.15
   targetFrequencyLabel: {fileID: 1891161454}
-  showDebugGizmos: 0
-  showHeightDebug: 0
+  showDebugGizmos: 1
+  showHeightDebug: 1
   heightMarkerColor: {r: 1, g: 1, b: 0, a: 0.3}
 --- !u!1 &1501779978
 GameObject:

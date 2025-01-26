@@ -1,9 +1,14 @@
 using UnityEngine;
+using TMPro;
 
 public class BuddhaPickupMaterial : MonoBehaviour
 {
     private MeshRenderer meshRenderer;
     private Material materialInstance;
+    private TextMeshPro frequencyLabel;
+    private TextMeshPro heightLabel;
+    private float frequency;
+    private const float LABEL_OFFSET = 0.2f;
 
     private void Awake()
     {
@@ -19,7 +24,7 @@ public class BuddhaPickupMaterial : MonoBehaviour
             }
         }
 
-        // Create a material instance and set up for transparency
+        // Create material instance and set up for transparency
         if (meshRenderer.sharedMaterial != null)
         {
             materialInstance = new Material(meshRenderer.sharedMaterial);
@@ -42,6 +47,38 @@ public class BuddhaPickupMaterial : MonoBehaviour
             meshRenderer.material = materialInstance;
             Debug.Log($"Created transparent material instance for {gameObject.name}. Shader: {materialInstance.shader.name}");
         }
+
+        // Create labels
+        CreateLabel(ref frequencyLabel, "FrequencyLabel", Vector3.up * LABEL_OFFSET);
+        CreateLabel(ref heightLabel, "HeightLabel", Vector3.down * LABEL_OFFSET);
+    }
+
+    private void CreateLabel(ref TextMeshPro label, string name, Vector3 offset)
+    {
+        GameObject labelObj = new GameObject(name);
+        labelObj.transform.parent = transform;
+        labelObj.transform.localPosition = offset;
+        
+        label = labelObj.AddComponent<TextMeshPro>();
+        label.alignment = TextAlignmentOptions.Center;
+        label.fontSize = 1;
+        label.color = Color.white;
+    }
+
+    public void SetFrequency(float freq)
+    {
+        frequency = freq;
+        if (frequencyLabel != null)
+        {
+            frequencyLabel.text = $"{freq:F1}Hz";
+        }
+        if (heightLabel != null)
+        {
+            heightLabel.text = $"Target: {freq:F1}Hz";
+            // float height = PitchHeightCalculator.GetHeightForFrequency(freq);
+            // heightLabel.text = $"{height:F2}m";  // This line needs to change
+
+        }
     }
 
     public void SetColor(Color color)
@@ -55,6 +92,22 @@ public class BuddhaPickupMaterial : MonoBehaviour
         else
         {
             Debug.LogError("No material instance!");
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (Camera.main != null)
+        {
+            // Make labels face camera
+            if (frequencyLabel != null)
+            {
+                frequencyLabel.transform.rotation = Camera.main.transform.rotation;
+            }
+            if (heightLabel != null)
+            {
+                heightLabel.transform.rotation = Camera.main.transform.rotation;
+            }
         }
     }
 

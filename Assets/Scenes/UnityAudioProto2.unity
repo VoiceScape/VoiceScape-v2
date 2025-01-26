@@ -20,11 +20,11 @@ RenderSettings:
   m_FogDensity: 0.1
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.0068881614, g: 0.0008899963, b: 0.03773585, a: 1}
+  m_AmbientSkyColor: {r: 0, g: 0, b: 0, a: 1}
   m_AmbientEquatorColor: {r: 0.20754719, g: 0.07269623, b: 0, a: 1}
   m_AmbientGroundColor: {r: 0.9559735, g: 0.1559265, b: 0.1470273, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 1
+  m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.2042542, g: 0.22654606, b: 0.2830189, a: 1}
   m_SkyboxMaterial: {fileID: 0}
   m_HaloStrength: 0.145
@@ -3874,7 +3874,7 @@ MonoBehaviour:
   nearColor: {r: 1, g: 0.4, b: 0.4, a: 1}
   farColor: {r: 0.4, g: 0.4, b: 1, a: 1}
   cardinalMarkerScale: 4
-  showGizmos: 1
+  showGizmos: 0
 --- !u!4 &796950514
 Transform:
   m_ObjectHideFlags: 0
@@ -5345,6 +5345,58 @@ Transform:
   - {fileID: 1526048630}
   m_Father: {fileID: 813182953}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &959910067
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 959910069}
+  - component: {fileID: 959910068}
+  m_Layer: 0
+  m_Name: SceneManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &959910068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 959910067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd2ad07ad59692e44a29ce0064bf0f93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  baseHeight: 20
+  maxHeight: 40
+  minFrequency: 80
+  maxFrequency: 300
+  audioAnalyzer: {fileID: 0}
+  playerController: {fileID: 0}
+  pickupManager: {fileID: 0}
+  pitchVisualizer: {fileID: 0}
+--- !u!4 &959910069
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 959910067}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.140115, y: 2.4061384, z: 0.20900753}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &960052031
 GameObject:
   m_ObjectHideFlags: 0
@@ -5863,22 +5915,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   attackTime: 0.2
-  decayTime: 0.2
+  decayTime: 0.1
   sustainLevel: 1
   releaseTime: 1
-  fallDelay: 1
-  pitchModulationStrength: 1
-  pitchSmoothTime: 0.1
   maxTiltSpeed: 3
   tiltDeadzone: 3
   tiltRange: {x: 0, y: 45}
-  terrainCheckDistance: 100
-  terrainLayer:
-    serializedVersion: 2
-    m_Bits: 64
   showDebugLogs: 0
-  showTiltDebug: 0
-  showVoiceDebug: 0
 --- !u!1 &1059828338
 GameObject:
   m_ObjectHideFlags: 0
@@ -7394,7 +7437,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1352226107}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6379dc10b3415f344bd8beaa218a5efa, type: 3}
   m_Name: 
@@ -8161,7 +8204,7 @@ MonoBehaviour:
   clarityThreshold: 0.88
   noiseFloor: 0.157
   useKeyFrequencies: 1
-  minFrequency: 100
+  minFrequency: 80
   maxFrequency: 600
   debugMode: 0
   showDetailedDebug: 0
@@ -8471,20 +8514,26 @@ MonoBehaviour:
   audioAnalyzer: {fileID: 1427782867}
   currentPitchSphere: {fileID: 1284181229}
   targetPitchSphere: {fileID: 870047330}
-  playerRig: {fileID: 651530572}
   visualizerDistance: 2
+  maxVerticalAngle: 20
+  verticalOffset: -0.2
   sphereBaseScale: 0.05
   targetFrequency: 130.81
   frequencyTolerance: 5
   targetColor: {r: 0.2, g: 1, b: 0.2, a: 0.8}
   normalColor: {r: 0.2, g: 0.6, b: 1, a: 0.8}
   closeColor: {r: 1, g: 0.8, b: 0.2, a: 0.8}
-  matchedColor: {r: 1, g: 0, b: 0, a: 1}
   positionSmoothTime: 0.15
   colorSmoothTime: 0.1
   scaleSmooth: 5
+  minFrequency: 80
+  maxFrequency: 300
+  perfectMatchThreshold: 2
+  matchedColor: {r: 1, g: 0, b: 0, a: 1}
   currentFrequencyLabel: {fileID: 895829352}
   confidenceLabel: {fileID: 828645900}
+  minFreqLabel: {fileID: 0}
+  maxFreqLabel: {fileID: 0}
   targetFrequencyLabel: {fileID: 1891161454}
   labelOffset: 0
 --- !u!1 &1501433169
@@ -13506,6 +13555,7 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 959910069}
   - {fileID: 701908315}
   - {fileID: 1427782864}
   - {fileID: 651530572}

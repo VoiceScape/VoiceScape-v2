@@ -1,7 +1,5 @@
 using UnityEngine;
 using TMPro;
-using System.Collections; 
-using UnityEngine.UI;
 
 public class PitchVisualizer3POV : MonoBehaviour
 {
@@ -46,6 +44,8 @@ public class PitchVisualizer3POV : MonoBehaviour
     [SerializeField] private float labelOffset = 0.15f;
     [SerializeField] private TextMeshPro targetFrequencyLabel;
 
+
+
     [Header("Debug Visualization")]
     [SerializeField] private bool showDebugGizmos = true;
     [SerializeField] private bool showHeightDebug = true;
@@ -61,7 +61,6 @@ public class PitchVisualizer3POV : MonoBehaviour
     private void Start()
     {
         InitializeComponents();
-        PitchHeightCalculator.Initialize(baseHeight, maxHeight, minFrequency, maxFrequency);
         InitializeMaterials();
         InitializeLabels();
         SetupLabels();
@@ -253,6 +252,7 @@ public class PitchVisualizer3POV : MonoBehaviour
         UpdateTargetSphere();
         UpdateCurrentSphere();
         UpdateLabels();
+        AlignLabelsToCamera();
     }
 
     private bool ValidateComponents()
@@ -295,7 +295,7 @@ public class PitchVisualizer3POV : MonoBehaviour
         }
 
         // Update height
-        float currentHeight = CalculateEnvelopedHeight(audioAnalyzer.Frequency);
+        float currentHeight = PitchHeightCalculator.GetHeightForFrequency(audioAnalyzer.Frequency);
         Vector3 position = currentPitchSphere.position;
         position.y = currentHeight;
         currentPitchSphere.position = position;
@@ -336,8 +336,7 @@ public class PitchVisualizer3POV : MonoBehaviour
         UpdateLabels();
     }
 
-    
-    private float CalculateEnvelopedHeight(float frequency)
+    private float CalculateCurrentSphereHeight(float frequency)
     {
         // Update release value
         if (audioAnalyzer.IsVoiceDetected && audioAnalyzer.Confidence > baseHeightConfidenceThreshold)
@@ -350,8 +349,12 @@ public class PitchVisualizer3POV : MonoBehaviour
             currentReleaseValue = Mathf.Max(0f, currentReleaseValue - (Time.deltaTime / releaseTime));
         }
 
-        // Get base height from calculator and apply envelope
-        return PitchHeightCalculator.GetHeightForFrequency(frequency) * currentReleaseValue;
+        // Base height with release
+        float heightFromAmplitude = baseHeight * currentReleaseValue;
+
+        float heightFromPitch = PitchHeightCalculator.GetHeightForFrequency(frequency);
+
+        return heightFromAmplitude + heightFromPitch;
     }
 
     private void UpdateLabels()
@@ -361,33 +364,41 @@ public class PitchVisualizer3POV : MonoBehaviour
             if (currentFrequencyLabel != null) 
             {
                 currentFrequencyLabel.text = "";
-                currentFrequencyLabel.gameObject.SetActive(false);
             }
             if (confidenceLabel != null)
             {
                 confidenceLabel.text = "";
-                confidenceLabel.gameObject.SetActive(false);
             }
             return;
         }
 
-        // Update current frequency label
+        // Update frequency label
         if (currentFrequencyLabel != null && showFrequencyLabel)
         {
-            currentFrequencyLabel.gameObject.SetActive(true);
             currentFrequencyLabel.text = $"{audioAnalyzer.Frequency:F0}Hz";
-            // Position above the current sphere
-            currentFrequencyLabel.transform.position = currentPitchSphere.position + (Vector3.up * labelOffset);
-            Debug.Log($"Current freq label pos: {currentFrequencyLabel.transform.position}");
+            currentFrequencyLabel.transform.position = currentPitchSphere.position + Vector3.up * labelOffset;
         }
 
         // Update confidence label
         if (confidenceLabel != null && showConfidenceLabel)
         {
-            confidenceLabel.gameObject.SetActive(true);
             confidenceLabel.text = $"{(audioAnalyzer.Confidence * 100):F0}%";
-            // Position below the current sphere
-            confidenceLabel.transform.position = currentPitchSphere.position - (Vector3.up * labelOffset);
+            confidenceLabel.transform.position = currentPitchSphere.position + Vector3.down * labelOffset;
+        }
+    }
+
+    private void AlignLabelsToCamera()
+    {
+        if (Camera.main == null) return;
+
+        TextMeshPro[] labels = { currentFrequencyLabel, confidenceLabel, minFreqLabel, maxFreqLabel };
+        foreach (var label in labels)
+        {
+            if (label != null)
+            {
+                label.transform.LookAt(Camera.main.transform);
+                label.transform.Rotate(0, 180, 0);
+            }
         }
     }
 
@@ -416,10 +427,11 @@ public class PitchVisualizer3POV : MonoBehaviour
                 currentPitchSphere.position
             );
 
-           Gizmos.color = Color.yellow;
+            // Draw target frequency height
+            Gizmos.color = Color.yellow;
             float targetHeight = PitchHeightCalculator.GetHeightForFrequency(targetFrequency);
             Gizmos.DrawWireCube(new Vector3(currentPitchSphere.position.x, targetHeight, currentPitchSphere.position.z), 
-                                new Vector3(0.3f, 0.01f, 0.3f));
+                               new Vector3(0.3f, 0.01f, 0.3f));
         }
 
         // Draw target sphere reference
@@ -431,7 +443,6 @@ public class PitchVisualizer3POV : MonoBehaviour
             
             // Draw height reference line
             Gizmos.DrawLine(targetPos, new Vector3(targetPos.x, PitchHeightCalculator.GetHeightForFrequency(targetFrequency), targetPos.z));
-
         }
     }
 
@@ -440,7 +451,7 @@ public class PitchVisualizer3POV : MonoBehaviour
         if (Camera.main == null) return;
 
         // Update all labels to face camera and maintain visibility
-        TextMeshPro[] allLabels = {currentFrequencyLabel, confidenceLabel, minFreqLabel, maxFreqLabel, targetFrequencyLabel};
+        TextMeshPro[] allLabels = {currentFrequencyLabel, confidenceLabel, minFreqLabel, maxFreqLabel};
         foreach (var label in allLabels)
         {
             if (label != null && label.gameObject.activeSelf)

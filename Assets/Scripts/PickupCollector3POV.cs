@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(SphereCollider))]
 public class PickupCollector3POV : MonoBehaviour
 {
-    private PickupManager3POV pickupManager;
+    private PickupManager3POV2 pickupManager;
     private SphereCollider triggerCollider;
     
     [SerializeField] private float collectionRadius = 0.5f;
@@ -11,7 +11,7 @@ public class PickupCollector3POV : MonoBehaviour
 
     private void Start()
     {
-        pickupManager = FindObjectOfType<PickupManager3POV>();
+        pickupManager = FindObjectOfType<PickupManager3POV2>();
         if (pickupManager == null)
         {
             Debug.LogError("PickupCollector3POV: Could not find PickupManager3POV in scene!");
@@ -28,17 +28,12 @@ public class PickupCollector3POV : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log($"OnTriggerEnter with {other.gameObject.name}");
+        Debug.Log($"PickupCollector3POV hit: {other.gameObject.name}");
         
-        if (pickupManager == null)
-        {
-            Debug.LogError("PickupCollector3POV: pickupManager is null during collision!");
-            return;
-        }
-
+        // Check if it's an active pickup
         if (pickupManager.IsActivePickup(other.gameObject))
         {
-            Debug.Log($"Valid pickup detected - collecting {other.gameObject.name}");
+            Debug.Log("Valid pickup detected - collecting!");
             pickupManager.OnPickupCollected(other.gameObject);
         }
     }
